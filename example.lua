@@ -11,32 +11,64 @@ ar:SetPrefix("test");
 	Here we set up the model for our object. In this case, the object
 	represents a generic user.
 ]]--
-ar:SetupModel("User"), function(schema)
-	--[[
-		Here we describe the properties of the model and how they're stored.
-		You call various functions on the schema object that's passed as part
-		of the setup function to build your object's representation.
-		Valid types include:
-			Boolean
-			Integer
-			String
-			Text
+ar:SetupModel("User",
+	function(schema, replication)
+		--[[
+			Here we describe the properties of the model and how they're stored.
+			You call various functions on the schema object that's passed as part
+			of the setup function to build your object's representation.
+			Valid types include:
+				Boolean
+				Integer
+				String
+				Text
 
-		Models are given an auto incremented ID by default, you can disable it
-		by calling schema:ID(false). You can chain property descriptions
-		together to make them look nicer if you'd like.
+			Models are given an auto incremented ID by default, you can disable it
+			by calling schema:ID(false). You can chain property descriptions
+			together to make them look nicer if you'd like.
 
-		In this example, we're making a string property for a player's name
-		and Steam ID, and an integer property for the amount of imaginary
-		boxes they've received.
+			In this example, we're making a string property for a player's name
+			and Steam ID, and an integer property for the amount of imaginary
+			boxes they've received.
 
-		The preferred naming style of properties is UpperCamelCase.
-	]]--
-	schema
-		:String("Name")
-		:String("SteamID")
-		:Integer("Boxes");
-end);
+			The preferred naming style of properties is UpperCamelCase.
+		]]--
+		schema
+			:String("Name")
+			:String("SteamID")
+			:Integer("Boxes")
+
+		--[[
+			Objects can be replicated to clients if requested. To enable it,
+			simply call replication:Enable(true).
+
+			Here, we call replication:Sync(true) to have newly-created objects
+			sent to the client. We also call replication:SyncExisting(true) to
+			send all previous objects that exist to the client. You should
+			only use SyncExisting for small arrays of objects - otherwise
+			you'll end up sending a TON of data to clients when you don't have
+			to!
+
+			replication:AllowDatabasePull(true) enables clients requesting
+			object data to trigger a database query to find the object if it 
+			doesn't reside in memory. Usually this should be left as false.
+
+			replication:Condition(function) decides what client is allowed to
+			request data, and what clients the server should update the data
+			for (if applicable). !!! NOTE: This always needs to be specified
+			if replication for this model is enabled !!! If you want to send
+			to all clients, simply return true.
+		]]--
+		replication
+			:Enable(true)
+			:Sync(true)
+			:SyncExisting(true)
+			:AllowDatabasePull(true)
+			:Condition(function(player)
+				return player:IsAdmin();
+			end)
+	end,
+);
 
 --[[
 	Now that we've set up our model, we can start using it to save objects to
@@ -121,4 +153,15 @@ end;
 do
 	local user = ar.model.User:FindBy("ID", 1);
 	user:Destroy();
+end;
+
+--[[
+	Clients can also lookup objects using the same methods if they are
+	explicitly granted permissions.
+]]--
+do
+	if (SERVER) then
+		
+	else
+	end;
 end;
