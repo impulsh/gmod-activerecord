@@ -14,22 +14,40 @@ ar:SetPrefix("test");
 ar:SetupModel("User",
 	function(schema, replication)
 		--[[
-			Here we describe the properties of the model and how they're stored.
-			You call various functions on the schema object that's passed as part
-			of the setup function to build your object's representation.
-			Valid types include:
+			Here we describe the properties of the model and how they're
+			stored. You call various functions on the schema object that's
+			passed as part of the setup function to build your object's
+			representation. Valid types include:
 				Boolean
 				Integer
 				String
 				Text
 
-			Models are given an auto incremented ID by default, you can disable it
-			by calling schema:ID(false). You can chain property descriptions
-			together to make them look nicer if you'd like.
+			Models are given an auto incremented ID by default, you can
+			disable it by calling schema:ID(false). You can chain property
+			descriptions together to make them look nicer if you'd like.
 
-			In this example, we're making a string property for a player's name
-			and Steam ID, and an integer property for the amount of imaginary
-			boxes they've received.
+			In this example, we're making a string property for a player's
+			name and Steam ID, and an integer property for the amount of
+			imaginary boxes they've received.
+
+			Searching for objects differs depending on whether or not you
+			decide to sync the database to the server. Syncing makes the
+			server the "owner" of the data in the sense that the database
+			replicates what the server has. This behaviour is enabled by
+			default and allows you to use the search functions without
+			callbacks.
+
+			Disabling syncing using schema:Sync(false) makes it so that the
+			server doesn't store its own copy of the data, which in turn makes
+			the database the owner of the data where the server is only used
+			to pull data from the database itself. Doing this requires you
+			to specify an extra callback parameter on every search function.
+
+			Leaving database syncing enabled suffices most of the time, but if
+			you're concerned about performance/memory issues with tables
+			containing a large number of rows (say, a ban list or something),
+			you'll probably want to disable syncing and use callbacks instead.
 
 			The preferred naming style of properties is UpperCamelCase.
 		]]--
@@ -37,10 +55,6 @@ ar:SetupModel("User",
 			:String("Name")
 			:String("SteamID")
 			:Integer("Boxes")
-
-			:OnSync(function()
-				print("Hello world!");
-			end)
 
 		--[[
 			Objects can be replicated to clients if requested. To enable it,
@@ -53,7 +67,7 @@ ar:SetupModel("User",
 			you'll end up sending a TON of data to clients when you don't have
 			to!
 
-			replication:AllowDatabasePull(true) enables clients requesting
+			replication:AllowPull(true) enables clients requesting
 			object data to trigger a database query to find the object if it 
 			doesn't reside in memory. Usually this should be left as false.
 
@@ -65,9 +79,8 @@ ar:SetupModel("User",
 		]]--
 		replication
 			:Enable(true)
-			:Sync(true)
 			:SyncExisting(true)
-			:AllowDatabasePull(true)
+			:AllowPull(true)
 			:Condition(function(player)
 				return player:IsAdmin();
 			end)
