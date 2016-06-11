@@ -38,6 +38,10 @@ ar:SetupModel("User",
 			:String("SteamID")
 			:Integer("Boxes")
 
+			:OnSync(function()
+				print("Hello world!");
+			end)
+
 		--[[
 			Objects can be replicated to clients if requested. To enable it,
 			simply call replication:Enable(true).
@@ -67,7 +71,7 @@ ar:SetupModel("User",
 			:Condition(function(player)
 				return player:IsAdmin();
 			end)
-	end,
+	end
 );
 
 --[[
