@@ -1,0 +1,167 @@
+
+@import "https://fonts.googleapis.com/css?family=Open+Sans:300,400";
+
+body {
+	padding: 0;
+	margin: 0;
+	background-color: white;
+	width: 100%;
+	font-size: 16px;
+
+	font-family: "Open Sans", sans-serif;
+	font-weight: 400;
+}
+
+h1, h2, h3 {
+	font-weight: 300;
+	padding: 0;
+	margin: 0;
+}
+
+ul, ol, li {
+	margin: 0;
+	padding: 0;
+	list-style-type: none;
+}
+
+a, a:link, a:visited, a:hover, a:active {
+	color: rgb(80, 80, 255);
+	text-decoration: none;
+}
+
+ul {
+	padding-bottom: 12px;
+}
+
+li, ul a {
+	padding-left: 32px;
+}
+
+strong {
+	font-weight: 300;
+	font-size: 18px;
+}
+
+span.parameter {
+	font-family: "Courier New", serif;
+	background-color: rgb(100, 100, 100);
+	padding: 2px;
+	margin-right: 4px;
+}
+
+#container, #main {
+	width: 100%;
+}
+
+#main {
+	display: flex;
+}
+
+#navigation {
+	width: 300px;
+	color: white;
+	background-color: rgb(60, 60, 60);
+}
+
+#navigation h1 {
+	text-align: center;
+	margin-bottom: 24px;
+}
+
+#navigation h2 {
+	padding-left: 12px;
+	padding-bottom: 4px;
+	font-size: 16px;
+	color: rgb(180, 180, 180);
+}
+
+#navigation li {
+	color: rgb(180, 180, 180);
+	padding: 6px 0 6px 36px;
+}
+
+#navigation li a {
+	color: white;
+	padding-left: 0;
+}
+
+#navigation li:hover {
+	background-color: rgb(80, 80, 80);
+}
+
+#content {
+	margin-left: 12px;
+	margin-right: 12px;
+	width: 100%;
+}
+
+#content h2 {
+	background-color: rgb(60, 60, 60);
+	padding: 12px;
+	color: rgb(180, 180, 180);
+}
+
+#content h2 a {
+	color: white !important;
+}
+
+#content table {
+	margin-bottom: 32px;
+	background-color: rgb(80, 80, 80);
+	width: 100%;
+	padding: 12px;
+	color: rgb(180, 180, 180);
+}
+
+#content table td {
+	width: 50%;
+}
+
+#content dl {
+	margin: 0;
+	margin-bottom: 32px;
+	background-color: rgb(80, 80, 80);
+	padding: 0 12px 0 12px;
+	color: rgb(180, 180, 180);
+}
+
+#content dt {
+	color: white;
+	padding-top: 24px;
+}
+
+#content dd {
+	padding-bottom: 24px;
+	border-bottom: 1px solid white;
+}
+
+#content dd a {
+	color: white;
+}
+
+#content dd ol {
+	margin-left: 32px;
+}
+
+#content dd h3 {
+	margin-top: 12px;
+}
+
+#content table a {
+	color: white !important;
+}
+
+#about {
+	color: rgb(180, 180, 180);
+	background-color: rgb(60, 60, 60);
+	padding: 12px;
+	font-weight: 300;
+}
+
+#about a {
+	color: white;
+}
+
+#about i {
+	font-style: normal;
+}

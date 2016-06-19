@@ -1,4 +1,7 @@
 
+---
+-- @module activerecord
+
 local library = {
 	__buffer = {},
 	queue = {
@@ -31,12 +34,14 @@ local library = {
 	model = {}
 };
 
+--- Network message enumeration
+-- @table MESSAGE
 local MESSAGE = {
-	COMMIT = 1,
-	SCHEMA = 2,
-	REQUEST = 3,
-	UPDATE = 4,
-	SYNC = 5
+	COMMIT = 1, -- Client-to-server object commit
+	SCHEMA = 2, -- Model schema update
+	REQUEST = 3, -- Object fetch request
+	UPDATE = 4, -- Object replication update
+	SYNC = 5 -- Full sync of objects
 };
 
 local function Log(text)
@@ -52,13 +57,18 @@ local function SearchMethod(name, bRequiresKey, bSingleResult)
 	};
 end;
 
+--- Helpers
+-- @section helpers
+
 --- Pluralize a string.
--- @string string
--- @treturn string
+-- @param string String to pluralize
+-- @return Pluralized string
 function library:Pluralize(string)
 	return string .. "s"; -- poor man's pluralization
 end;
 
+--- Returns the first function argument from the given varargs. Currently kind of useless.
+-- @return Callback function
 function library:GetCallbackArgument(...)
 	local arguments = {...};
 	local callback = arguments[1];
@@ -68,34 +78,53 @@ function library:GetCallbackArgument(...)
 end;
 
 --- Sets the prefix used when creating tables. An underscore is appended to the end of the given prefix. Default is "ar".
--- @string prefix
+-- @param prefix String to use as prefix
 function library:SetPrefix(prefix)
 	self.config.prefix = string.lower(prefix) .. "_";
 	self:OnPrefixSet();
 end;
 
+--- Returns the unique full name of the project. Mainly used for networking.
+-- @return Name of project
 function library:GetName()
 	return "activerecord_" .. self.config.prefix;
 end;
 
+--- Serializes and compresses a table for networking.
+-- @param table Table of data
+-- @return Packed data string
+-- @return Length of data
 function library:PackTable(table)
 	local data = util.Compress(util.TableToJSON(table));
 	return data, string.len(data);
 end;
 
+--- Decompresses and deserializes a string into a table.
+-- @see PackTable
+-- @param string Packed data string
+-- @return Table of data
 function library:UnpackTable(string)
 	return util.JSONToTable(util.Decompress(string));
 end;
 
+--- Returns true if the given object is an activerecord object.
+-- @param var Any object
+-- @return Whether or not var is an activerecord object
 function library:IsObject(var)
 	return getmetatable(var) == self.meta.object;
 end;
 
+--- Begins an activerecord net message.
+-- @see MESSAGE
+-- @param type Message type 
 function library:StartNetMessage(type)
 	net.Start(self:GetName() .. ".message");
 	net.WriteUInt(type, 8);
 end;
 
+--- Writes a table to the currently active net message.
+-- @see ReadNetTable
+-- @param data Table of data
 function library:WriteNetTable(data)
 	local data, length = self:PackTable(data);
 
@@ -103,6 +132,9 @@ function library:WriteNetTable(data)
 	net.WriteData(data, length);
 end;
 
+--- Reads a table from the currently active net message.
+-- @see WriteNetTable
+-- @return Table of data
 function library:ReadNetTable()
 	return self:UnpackTable(net.ReadData(net.ReadUInt(32)));
 end;
@@ -118,9 +150,8 @@ if (SERVER) then
 		self.mysql = table;
 	end;
 
-	--[[
-		Model schema
-	]]--
+	--- Class: Schema
+	-- @section schema
 	library.meta.schema.__index = library.meta.schema;
 
 	function library.meta.schema:ID(bUse)
@@ -131,62 +162,85 @@ if (SERVER) then
 		return self;
 	end;
 
+	--- Adds a string to the model schema.
+	-- @param name Name of field
 	function library.meta.schema:String(name)
 		self[name] = "VARCHAR(255)";
 		return self;
 	end;
 
+	--- Adds a text field to the model schema.
+	-- @param name Name of field
 	function library.meta.schema:Text(name)
 		self[name] = "TEXT";
 		return self;
 	end;
 
+	--- Adds an integer to the model schema.
+	-- @param name Name of field
 	function library.meta.schema:Integer(name)
 		self[name] = "INTEGER";
 		return self;
 	end;
 
+	--- Adds a boolean to the model schema.
+	-- @param name Name of field
 	function library.meta.schema:Boolean(name)
 		self[name] = "TINYINT(1)";
 		return self;
 	end;
 
+	--- Sets whether or not the model will sync all in-memory objects with the database.
+	-- @param bValue true/false
 	function library.meta.schema:Sync(bValue)
 		self.__bSync = tobool(bValue);
 		return self;
 	end;
 
+	--- Sets callback executed when syncing is completed. Only called if `schema:Sync(true)` has been set.
+	-- @param callback Function to execute
 	function library.meta.schema:OnSync(callback)
 		self.__onSync = callback;
 		return self;
 	end;
 
-	--[[
-		Model replication
-	]]--
+	--- Class: Replication
+	-- @section replication
 	library.meta.replication.__index = library.meta.replication;
 
+	--- Enables replication for the model.
+	-- @param bValue Whether or not to enable/disable
 	function library.meta.replication:Enable(bValue)
 		self.bEnabled = bValue;
 		return self;
 	end;
 
+	--- Sets the replication condition function. Note that this is REQUIRED when you're using replication.
+	-- A boolean return type is expected from the filter function.
+	-- @param callback Function to use as the filter
 	function library.meta.replication:Condition(callback)
 		self.condition = callback;
 		return self;
 	end;
 
+	--- Helpers
+	-- @section helpers
+
+	--- Returns true if the player is able to request object data from the given model.
+	-- @param modelName Name of the model
+	-- @param player Player to check with
+	-- @return Whether or not the player is allowed to request object data
 	function library:CheckObjectRequestCondition(modelName, player)
 		return (self.model[modelName] and
 			self.model[modelName].__replication.bEnabled and
 			self.model[modelName].__replication.condition(player));
 	end;
 
-	--[[
-		Object
-	]]--
+	--- Class: Object
+	-- @section object
 	library.meta.object.__index = library.meta.object;
 
+	--- Commits the object to the database and networks it to clients if applicable.
 	function library.meta.object:Save()
 		library:QueuePush("object", self);
 
@@ -195,6 +249,8 @@ if (SERVER) then
 		end;
 	end;
 
+	--- Returns a string representation of the object. This will include its model and properties.
+	-- @return String representation of object
 	function library.meta.object:__tostring()
 		local result = string.format("<activerecord object of model %s>:", self.__model.__name);
 
@@ -209,6 +265,11 @@ if (SERVER) then
 		return result;
 	end;
 
+	--- Helpers
+	-- @section helpers
+
+	--- Networks an object to clients. This does not check if replication is applicable for the object's model, so you'll have to do it yourself!
+	-- @param object Object to network
 	function library:NetworkObject(object)
 		local model = object.__model;
 		local players = self:FilterPlayers(model.__replication.condition);
@@ -223,11 +284,12 @@ if (SERVER) then
 		net.Send(players[1]); -- TODO: why only the first player?
 	end;
 
-	--[[
-		Model
-	]]--
+	--- Class: Model
+	-- @section model
 	library.meta.model.__index = library.meta.model;
 
+	--- Creates a new object.
+	-- @return An object defined by the given model class.
 	function library.meta.model:New()
 		local object = setmetatable({
 			__model = self,
@@ -243,6 +305,9 @@ if (SERVER) then
 	end;
 
 	SearchMethod("All");
+	--- Returns all objects with this model.
+	-- @param ...
+	-- @return Table of objects
 	function library.meta.model:All(...)
 		if (self.__schema.__bSync) then
 			return library.__buffer[self.__name];
@@ -258,6 +323,9 @@ if (SERVER) then
 	end;
 
 	SearchMethod("First", false, true);
+	--- Returns the first object with this model
+	-- @param ...
+	-- @return An object
 	function library.meta.model:First(...)
 		if (self.__schema.__bSync) then
 			return library.__buffer[self.__name][1];
@@ -275,6 +343,11 @@ if (SERVER) then
 	end;
 
 	SearchMethod("FindBy", true, true);
+	--- Returns an object with a matching key/value pair.
+	-- @param key Name of the property to match
+	-- @param value Value of the property to match
+	-- @param ...
+	-- @return An object
 	function library.meta.model:FindBy(key, value, ...)
 		if (self.__schema.__bSync) then
 			local result;
@@ -300,6 +373,14 @@ if (SERVER) then
 		end;
 	end;
 
+	--- Helpers
+	-- @section helpers
+
+	--- Creates objects from the given SQL result.
+	-- @param model Model to build object from
+	-- @param result SQL result set
+	-- @param[opt] bSingleResult Whether or not this should return a single object
+	-- @return Table of objects, or a single object as specified by bSingleResult
 	function library:BuildObjectsFromSQL(model, result, bSingleResult)
 		if (!result or type(result) != "table" or #result < 1) then
 			return {};
@@ -329,6 +410,9 @@ if (SERVER) then
 		return objects;
 	end;
 
+	--- Returns a table of an object's properties. Useful for iterating over properties.
+	-- @param object Object to get properties from
+	-- @return Table of key/values for the given object
 	function library:GetObjectTable(object)
 		local result = {};
 
@@ -343,6 +427,9 @@ if (SERVER) then
 		return result;
 	end;
 
+	--- Creates a model and does the appropriate database/networking setup for it.
+	-- @param name Name of the model.
+	-- @param setup Function to execute when setting up the model.
 	function library:SetupModel(name, setup)
 		local schema = setmetatable({
 			__bSync = true,
@@ -368,6 +455,9 @@ if (SERVER) then
 		self:QueuePush("schema", name);
 	end;
 
+	--- Returns a table of players that passed the given filter function.
+	-- @param func The filter function to run players through
+	-- @return A table of players
 	function library:FilterPlayers(func)
 		local filter = {};
 
@@ -380,6 +470,8 @@ if (SERVER) then
 		return filter;
 	end;
 
+	--- Networks a model to clients. This does not check if replication is applicable for the object's model, so you'll have to do it yourself!
+	-- @param model Model to network
 	function library:NetworkModel(model)
 		local players = self:FilterPlayers(model.__replication.condition);
 
@@ -404,8 +496,12 @@ if (SERVER) then
 	end;
 
 	--[[
-		Database
+		Database-specific
 	]]--
+
+	--- Queues a database push with the given type.
+	-- @param type The type of data push
+	-- @param data The data to push
 	function library:QueuePush(type, data)
 		table.insert(self.queue.push, {
 			type = type,
@@ -413,6 +509,8 @@ if (SERVER) then
 		});
 	end;
 
+	--- Pulls all of a model's objects from the database and stores it in memory.
+	-- @param model The model to sync
 	function library:PerformModelSync(model)
 		local query = self.mysql:Select(self:GetTableName(model.__name));
 			query:Callback(function(result)
@@ -429,6 +527,10 @@ if (SERVER) then
 		query:Execute();
 	end;
 
+	--- Builds an SQL query given the type.
+	-- @param type The type of query
+	-- @param data Any extra data
+	-- @return An SQL query object
 	function library:BuildQuery(type, data)
 		if (type == "schema") then
 			local model = self.model[data];
@@ -483,6 +585,8 @@ if (SERVER) then
 		end;
 	end;
 
+	--- Handles some database stuff. Should be called constantly - about every second is enough.
+	-- This is already done automatically.
 	function library:Think()
 		if (!self.mysql:IsConnected()) then
 			return;
@@ -506,6 +610,9 @@ if (SERVER) then
 		end);
 	end;
 
+	--- Called when the prefix for the project has been set.
+	-- Currently used for setting up networking events.
+	-- This should NOT be overridden, otherwise things will break BADLY!
 	function library:OnPrefixSet()
 		util.AddNetworkString(self:GetName() .. ".message");
 
