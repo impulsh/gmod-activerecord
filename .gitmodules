@@ -1,3 +1,0 @@
-[submodule "dependencies/sqlwrapper"]
-	path = dependencies/sqlwrapper
-	url = https://github.com/alexgrist/GLua-MySQL-Wrapper
