@@ -35,7 +35,8 @@ local MESSAGE = {
 	COMMIT = 1,
 	SCHEMA = 2,
 	REQUEST = 3,
-	UPDATE = 4
+	UPDATE = 4,
+	SYNC = 5
 };
 
 local function Log(text)
@@ -88,6 +89,22 @@ end;
 
 function library:IsObject(var)
 	return getmetatable(var) == self.meta.object;
+end;
+
+function library:StartNetMessage(type)
+	net.Start(self:GetName() .. ".message");
+	net.WriteUInt(type, 8);
+end;
+
+function library:WriteNetTable(data)
+	local data, length = self:PackTable(data);
+
+	net.WriteUInt(length, 32);
+	net.WriteData(data, length);
+end;
+
+function library:ReadNetTable()
+	return self:UnpackTable(net.ReadData(net.ReadUInt(32)));
 end;
 
 if (SERVER) then
@@ -172,6 +189,10 @@ if (SERVER) then
 
 	function library.meta.object:Save()
 		library:QueuePush("object", self);
+
+		if (self.__model.__schema.__bSync and self.__model.__replication.bEnabled) then
+			library:NetworkObject(self);
+		end;
 	end;
 
 	function library.meta.object:__tostring()
@@ -186,6 +207,20 @@ if (SERVER) then
 		end;
 
 		return result;
+	end;
+
+	function library:NetworkObject(object)
+		local model = object.__model;
+		local players = self:FilterPlayers(model.__replication.condition);
+
+		if (#players < 1) then
+			return;
+		end;
+
+		self:StartNetMessage(MESSAGE.UPDATE);
+			net.WriteString(model.__name)
+			self:WriteNetTable(self:GetObjectTable(object));
+		net.Send(players[1]); -- TODO: why only the first player?
 	end;
 
 	--[[
@@ -273,12 +308,7 @@ if (SERVER) then
 		local objects = {};
 
 		for id, row in pairs(result) do
-			local object = {};
-
-			if (!bNetworkFormat) then
-				object = model:New();
-				object.__bSaved = true;
-			end;
+			local object = model:New();
 
 			for k, v in pairs(row) do
 				if (!model.__schema[k] or v == "NULL") then
@@ -288,6 +318,7 @@ if (SERVER) then
 				object[k] = v;
 			end;
 
+			object.__bSaved = true;
 			table.insert(objects, object);
 		end;
 
@@ -363,18 +394,13 @@ if (SERVER) then
 				continue;
 			end;
 
-			data[k] = true
+			data[k] = true;
 		end;
 
-		net.Start(self:GetName() .. ".message");
-			net.WriteUInt(MESSAGE.SCHEMA, 8);
-
+		self:StartNetMessage(MESSAGE.SCHEMA);
 			net.WriteString(model.__name)
-
-			local data, length = self:PackTable(data);
-			net.WriteUInt(length, 32);
-			net.WriteData(data, length);
-		net.Send(players[1]);
+			self:WriteNetTable(data);
+		net.Send(players[1]); -- TODO: why only the first player?
 	end;
 
 	--[[
@@ -389,24 +415,15 @@ if (SERVER) then
 
 	function library:PerformModelSync(model)
 		local query = self.mysql:Select(self:GetTableName(model.__name));
-			query:Callback(function(result, status, lastID)
-				if (result) then
-					for k, schema in pairs(result) do
-						local object = model:New();
+			query:Callback(function(result)
+				local objects = self:BuildObjectsFromSQL(model, result);
 
-						for property, value in pairs(schema) do
-							if (value == "NULL") then
-								continue;
-							end;
-
-							object[property] = value;
-							object.__bSaved = true;
-						end;
-					end;
+				for k, v in pairs(objects) do -- TODO: don't send a message for each object
+					self:NetworkObject(v);
 				end;
 
 				if (model.__schema.__onSync) then
-					model.__schema.__onSync();
+					model.__schema.__onSync(); -- TODO: pcall this
 				end;
 			end);
 		query:Execute();
@@ -501,7 +518,17 @@ if (SERVER) then
 			Network events
 		]]--
 		hook.Add("PlayerInitialSpawn", self:GetName() .. ":PlayerInitialSpawn", function(player)
-			--
+			for modelName, model in pairs(library.model) do
+				if (model.__replication.bEnabled) then
+					self:NetworkModel(model);
+
+					if (model.__schema.__bSync) then
+						for k, v in pairs(library.__buffer[modelName]) do
+							self:NetworkObject(v);
+						end;
+					end;
+				end;
+			end;
 		end);
 
 		net.Receive(self:GetName() .. ".message", function(length, player)
@@ -515,8 +542,7 @@ if (SERVER) then
 					local schema = model.__schema;
 
 					local requestID = net.ReadString();
-					local dataLength = net.ReadUInt(32);
-					local criteria = self:UnpackTable(net.ReadData(dataLength));
+					local criteria = self:ReadNetTable();
 
 					local method = criteria[1];
 					local key = tostring(criteria[2]); -- TODO: check for different operators (e.g > ?)
@@ -531,8 +557,7 @@ if (SERVER) then
 						if (schema.__bSync) then
 							local result = model[method](model, key, value);
 
-							net.Start(self:GetName() .. ".message");
-								net.WriteUInt(MESSAGE.REQUEST, 8);
+							self:StartNetMessage(MESSAGE.REQUEST);
 								net.WriteString(requestID);
 								net.WriteString(modelName);
 
@@ -548,9 +573,7 @@ if (SERVER) then
 									end;
 								end;
 
-								local data, length = self:PackTable(objects);
-								net.WriteUInt(length, 32);
-								net.WriteData(data, length);
+								self:WriteNetTable(objects);
 							net.Send(player);
 						else
 							local arguments = {model};
@@ -565,8 +588,7 @@ if (SERVER) then
 									return;
 								end;
 
-								net.Start(self:GetName() .. ".message");
-									net.WriteUInt(MESSAGE.REQUEST, 8);
+								self:StartNetMessage(MESSAGE.REQUEST);
 									net.WriteString(requestID);
 									net.WriteString(modelName);
 
@@ -582,9 +604,7 @@ if (SERVER) then
 										end;
 									end;
 
-									local data, length = self:PackTable(objects);
-									net.WriteUInt(length, 32);
-									net.WriteData(data, length);
+									self:WriteNetTable(objects);
 								net.Send(player);
 							end);
 
@@ -612,15 +632,11 @@ if (CLIENT) then
 	function library:RequestObject(name, criteria, callback)
 		local id = self.config.prefix .. CurTime() .. "-" .. math.random(100000, 999999);
 
-		net.Start(self:GetName() .. ".message");
-			net.WriteUInt(MESSAGE.REQUEST, 8);
-
+		self:StartNetMessage(MESSAGE.REQUEST);
 			net.WriteString(name);
 			net.WriteString(id);
 			
-			local data, length = self:PackTable(criteria);
-			net.WriteUInt(length, 32);
-			net.WriteData(data, length);
+			self:WriteNetTable(criteria);
 		net.SendToServer();
 
 		self.queue.pull[id] = callback;
@@ -646,10 +662,14 @@ if (CLIENT) then
 	]]--
 	library.meta.model.__index = library.meta.model;
 
-	function library.meta.model:New()
+	function library.meta.model:New(bAddToBuffer)
 		local object = setmetatable({
 			__model = self
 		}, library.meta.object);
+
+		if (bAddToBuffer) then
+			table.insert(library.__buffer[self.__name], object);
+		end;
 
 		return object;
 	end;
@@ -695,6 +715,7 @@ if (CLIENT) then
 		}, self.meta.model);
 
 		self.model[name] = model;
+		self.__buffer[name] = {};
 	end;
 
 	--[[
@@ -711,12 +732,12 @@ if (CLIENT) then
 				local model = self.model[modelName];
 
 				if (!model) then
-					ErrorNoHalt("Received networking message for invalid model \"" .. modelName .. "\"!\n");
+					ErrorNoHalt("Received request networking message for invalid model \"" .. modelName .. "\"!\n");
 					return;
 				end;
 
 				if (self.queue.pull[id] and type(self.queue.pull[id]) == "function") then
-					local result = self:UnpackTable(net.ReadData(net.ReadUInt(32)));
+					local result = self:ReadNetTable();
 					result = self:BuildObjectsFromMessage(model, result);
 
 					if (bSingleResult) then
@@ -728,10 +749,42 @@ if (CLIENT) then
 				end;
 			elseif (message == MESSAGE.SCHEMA) then
 				local name = net.ReadString();
-				local data = net.ReadData(net.ReadUInt(32));
-				local schema = self:UnpackTable(data);
+				local schema = self:ReadNetTable();
 
 				self:SetupModel(name, schema);
+			elseif (message == MESSAGE.UPDATE) then
+				local modelName = net.ReadString();
+				local model = self.model[modelName];
+
+				if (!model) then
+					ErrorNoHalt("Received update networking message for invalid model \"" .. modelName .. "\"!\n");
+					return;
+				end;
+
+				local data = self:ReadNetTable(data);
+
+				local found = false;
+
+				for id, object in pairs(self.__buffer[modelName]) do
+					if (object.ID == data.ID) then
+						for k, v in pairs(data) do
+							object[k] = v;
+						end;
+
+						print("found object")
+						found = true;
+						break;
+					end;
+				end;
+
+				if (!found) then
+					print("not found, creating new object")
+					local object = model:New(true);
+
+					for k, v in pairs(data) do
+						object[k] = v;
+					end;
+				end;
 			end;
 		end);
 	end;
