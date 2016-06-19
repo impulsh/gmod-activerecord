@@ -34,7 +34,8 @@ local library = {
 local MESSAGE = {
 	COMMIT = 1,
 	SCHEMA = 2,
-	REQUEST = 3
+	REQUEST = 3,
+	UPDATE = 4
 };
 
 local function Log(text)
@@ -43,8 +44,11 @@ local function Log(text)
 	end;
 end;
 
-local function SearchMethod(name)
-	library.searchMethods[name] = true;
+local function SearchMethod(name, bRequiresKey, bSingleResult)
+	library.searchMethods[name] = {
+		bRequiresKey = bRequiresKey,
+		bSingleResult = bSingleResult
+	};
 end;
 
 --- Pluralize a string.
@@ -58,7 +62,7 @@ function library:GetCallbackArgument(...)
 	local arguments = {...};
 	local callback = arguments[1];
 
-	assert(callback and type(callback) == "function", "Expected function type for asynchronous request");
+	assert(callback and type(callback) == "function", "Expected function type for asynchronous request, got \"" .. type(callback) .. "\"");
 	return callback;
 end;
 
@@ -80,6 +84,10 @@ end;
 
 function library:UnpackTable(string)
 	return util.JSONToTable(util.Decompress(string));
+end;
+
+function library:IsObject(var)
+	return getmetatable(var) == self.meta.object;
 end;
 
 if (SERVER) then
@@ -117,7 +125,7 @@ if (SERVER) then
 	end;
 
 	function library.meta.schema:Integer(name)
-		self[name] = "INT(11)";
+		self[name] = "INTEGER";
 		return self;
 	end;
 
@@ -204,26 +212,34 @@ if (SERVER) then
 		if (self.__schema.__bSync) then
 			return library.__buffer[self.__name];
 		else
+			local arguments = {...};
 			local query = library.mysql:Select(library:GetTableName(self.__name));
-				query:Callback(library:GetCallbackArgument(...));
+				query:Callback(function(result)
+					local callback = library:GetCallbackArgument(unpack(arguments));
+					callback(library:BuildObjectsFromSQL(self, result));
+				end);
 			query:Execute();
 		end;
 	end;
 
-	SearchMethod("First");
+	SearchMethod("First", false, true);
 	function library.meta.model:First(...)
 		if (self.__schema.__bSync) then
 			return library.__buffer[self.__name][1];
 		else
+			local arguments = {...};
 			local query = library.mysql:Select(library:GetTableName(self.__name));
 				query:OrderByAsc("ID"); -- TODO: account for no ID
 				query:Limit(1);
-				query:Callback(library:GetCallbackArgument(...));
+				query:Callback(function(result)
+					local callback = library:GetCallbackArgument(unpack(arguments));
+					callback(library:BuildObjectsFromSQL(self, result, true));
+				end);
 			query:Execute();
 		end;
 	end;
 
-	SearchMethod("FindBy");
+	SearchMethod("FindBy", true, true);
 	function library.meta.model:FindBy(key, value, ...)
 		if (self.__schema.__bSync) then
 			local result;
@@ -237,12 +253,63 @@ if (SERVER) then
 
 			return result;
 		else
+			local arguments = {...};
 			local query = library.mysql:Select(library:GetTableName(self.__name));
 				query:Where(key, value);
 				query:Limit(1);
-				query:Callback(library:GetCallbackArgument(...));
+				query:Callback(function(result)
+					local callback = library:GetCallbackArgument(unpack(arguments));
+					callback(library:BuildObjectsFromSQL(self, result, true));
+				end);
 			query:Execute();
 		end;
+	end;
+
+	function library:BuildObjectsFromSQL(model, result, bSingleResult)
+		if (!result or type(result) != "table" or #result < 1) then
+			return {};
+		end;
+
+		local objects = {};
+
+		for id, row in pairs(result) do
+			local object = {};
+
+			if (!bNetworkFormat) then
+				object = model:New();
+				object.__bSaved = true;
+			end;
+
+			for k, v in pairs(row) do
+				if (!model.__schema[k] or v == "NULL") then
+					continue;
+				end;
+
+				object[k] = v;
+			end;
+
+			table.insert(objects, object);
+		end;
+
+		if (bSingleResult) then -- TODO: should avoid building the results table here
+			return objects[1];
+		end;
+
+		return objects;
+	end;
+
+	function library:GetObjectTable(object)
+		local result = {};
+
+		for k, v in pairs(object) do
+			if (string.sub(k, 1, 2) == "__" or !object.__model.__schema[k]) then
+				continue;
+			end;
+
+			result[k] = v;
+		end;
+
+		return result;
 	end;
 
 	function library:SetupModel(name, setup)
@@ -356,7 +423,7 @@ if (SERVER) then
 				end;
 
 				if (k == "ID") then
-					query:Create("ID", "INT NOT NULL AUTO_INCREMENT");
+					query:Create("ID", "INTEGER NOT NULL AUTO_INCREMENT");
 					query:PrimaryKey("ID");
 				else
 					query:Create(k, v);
@@ -456,20 +523,44 @@ if (SERVER) then
 					local value = criteria[3];
 
 					-- TODO: check if replication config is allowed to pull from database
-					if (self.searchMethods[method] and string.sub(key, 1, 2) != "__" and schema[key]) then
+					local searchMethod = self.searchMethods[method];
+
+					if (searchMethod and
+						(searchMethod.bRequiresKey and string.sub(key, 1, 2) != "__" and schema[key]) or
+						(!searchMethod.bRequiresKey)) then
 						if (schema.__bSync) then
 							local result = model[method](model, key, value);
 
 							net.Start(self:GetName() .. ".message");
 								net.WriteUInt(MESSAGE.REQUEST, 8);
 								net.WriteString(requestID);
+								net.WriteString(modelName);
 
-								local data, length = self:PackTable({result}); -- TODO: send ONLY the objects
+								net.WriteBool(searchMethod.bSingleResult);
+
+								local objects = {};
+
+								if (searchMethod.bSingleResult) then
+									table.insert(objects, self:GetObjectTable(result));
+								else
+									for k, v in pairs(result) do
+										table.insert(objects, self:GetObjectTable(v));
+									end;
+								end;
+
+								local data, length = self:PackTable(objects);
 								net.WriteUInt(length, 32);
 								net.WriteData(data, length);
 							net.Send(player);
 						else
-							model[method](model, key, value, function(...)
+							local arguments = {model};
+
+							if (searchMethod.bRequiresKey) then
+								table.insert(arguments, key);
+								table.insert(arguments, value);
+							end;
+
+							table.insert(arguments, function(result) -- TODO: WHAT
 								if (!IsValid(player) or !player:IsPlayer()) then
 									return;
 								end;
@@ -477,12 +568,27 @@ if (SERVER) then
 								net.Start(self:GetName() .. ".message");
 									net.WriteUInt(MESSAGE.REQUEST, 8);
 									net.WriteString(requestID);
+									net.WriteString(modelName);
 
-									local data, length = self:PackTable({...});
+									net.WriteBool(searchMethod.bSingleResult);
+
+									local objects = {};
+
+									if (searchMethod.bSingleResult) then
+										table.insert(objects, self:GetObjectTable(result[1]));
+									else
+										for k, v in pairs(result) do
+											table.insert(objects, self:GetObjectTable(v));
+										end;
+									end;
+
+									local data, length = self:PackTable(objects);
 									net.WriteUInt(length, 32);
 									net.WriteData(data, length);
 								net.Send(player);
 							end);
+
+							model[method](unpack(arguments));
 						end;
 					else
 						Log("Invalid search method or key!");
@@ -548,10 +654,38 @@ if (CLIENT) then
 		return object;
 	end;
 
+	function library.meta.model:All(...)
+		library:RequestObject(self.__name, {
+			"All"
+		}, library:GetCallbackArgument(...));
+	end;
+
+	function library.meta.model:First(...)
+		library:RequestObject(self.__name, {
+			"First"
+		}, library:GetCallbackArgument(...));
+	end;
+
 	function library.meta.model:FindBy(key, value, ...)
 		library:RequestObject(self.__name, {
 			"FindBy", key, value
 		}, library:GetCallbackArgument(...));
+	end;
+
+	function library:BuildObjectsFromMessage(model, result)
+		local objects = {};
+
+		for id, data in pairs(result) do
+			local object = model:New();
+
+			for k, v in pairs(data) do
+				object[k] = v;
+			end;
+
+			table.insert(objects, object);
+		end;
+
+		return objects;
 	end;
 
 	function library:SetupModel(name, schema)
@@ -572,9 +706,22 @@ if (CLIENT) then
 
 			if (message == MESSAGE.REQUEST) then
 				local id = net.ReadString();
+				local modelName = net.ReadString();
+				local bSingleResult = net.ReadBool();
+				local model = self.model[modelName];
+
+				if (!model) then
+					ErrorNoHalt("Received networking message for invalid model \"" .. modelName .. "\"!\n");
+					return;
+				end;
 
 				if (self.queue.pull[id] and type(self.queue.pull[id]) == "function") then
 					local result = self:UnpackTable(net.ReadData(net.ReadUInt(32)));
+					result = self:BuildObjectsFromMessage(model, result);
+
+					if (bSingleResult) then
+						result = result[1];
+					end;
 
 					self.queue.pull[id](result); -- TODO: pcall this
 					self.queue.pull[id] = nil;
