@@ -1,0 +1,18 @@
+
+language: python
+sudo: false
+
+env:
+  global:
+  - ENCRYPTION_LABEL=c8cffa1035e0
+  - COMMIT_AUTHOR_EMAIL=impulsh@gmail.com
+
+before_install:
+  - pip install hererocks
+  - hererocks here -l5.2 -rlatest
+  - export PATH=$PATH:$PWD/here/bin
+
+install:
+  - luarocks install ldoc
+
+script: bash ./deploy.sh
