@@ -1,6 +1,9 @@
 # gmod-activerecord
 A **work-in-progress** library for Garry's Mod that implements persistent objects via an active record pattern.
 
+## Documentation
+If you need a quick reference, check out the [documentation](https://impulsh.github.io/gmod-activerecord). The documentation is automatically built and updated from the source.
+
 ## Prerequisites
 This library requires you to have https://github.com/alexgrist/GLua-MySQL-Wrapper included somewhere on your server. If it's nowhere to be found, activerecord will try to include the one bundled with this repo (make sure you pull this repository recursively so you also grab the submodule).
 
