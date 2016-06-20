@@ -1,6 +1,11 @@
 #!/bin/bash
 set -e # Exit with nonzero exit code if anything fails
 
+cd docs
+ldoc .
+
+cd ..
+
 SOURCE_BRANCH="master"
 TARGET_BRANCH="gh-pages"
 
@@ -25,8 +30,7 @@ cd ..
 # Clean out existing contents
 rm -rf out/**/* || exit 0
 
-ldoc .
-mv -v current/* out/
+mv -v docs/current/* out/
 cp -v .gitignore out/.gitignore
 cp -v LICENSE out/LICENSE
 
