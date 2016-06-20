@@ -4,7 +4,7 @@ sudo: false
 
 env:
   global:
-  - ENCRYPTION_LABEL=c8cffa1035e0
+  - ENCRYPTION_LABEL=4a82bd759009
   - COMMIT_AUTHOR_EMAIL=impulsh@gmail.com
 
 before_install:
