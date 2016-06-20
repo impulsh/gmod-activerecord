@@ -44,3 +44,4 @@ luac.out
 
 # etc
 test.lua
+docs/current/*

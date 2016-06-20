@@ -1,0 +1,1118 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd">
+<html>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8"/>
+<head>
+    <title>gmod-activerecord documentation</title>
+    <link rel="stylesheet" href="ldoc.css" type="text/css" />
+</head>
+<body>
+
+<div id="container">
+
+<div id="product">
+	<div id="product_logo"></div>
+	<div id="product_name"><big><b></b></big></div>
+	<div id="product_description"></div>
+</div> <!-- id="product" -->
+
+
+<div id="main">
+
+
+<!-- Menu -->
+
+<div id="navigation">
+<br/>
+<h1>gmod-activerecord</h1>
+
+
+<h2>Contents</h2>
+<ul>
+<li><a href="#Tables">Tables</a></li>
+<li><a href="#Helpers">Helpers </a></li>
+<li><a href="#Class__Schema">Class: Schema </a></li>
+<li><a href="#Class__Replication">Class: Replication </a></li>
+<li><a href="#Class__Object">Class: Object </a></li>
+<li><a href="#Class__Model">Class: Model </a></li>
+</ul>
+
+
+<h2>Modules</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><strong>activerecord</strong></li>
+</ul>
+<h2>Topics</h2>
+<ul class="$(kind=='Topics' and '' or 'nowrap'">
+  <li><a href="topics/01-intro.md.html">01-intro</a></li>
+</ul>
+
+</div>
+
+<div id="content">
+
+<h1>Module <code>activerecord</code></h1>
+<p>
+
+</p>
+<p>
+
+</p>
+
+
+<h2><a href="#Tables">Tables</a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#MESSAGE">MESSAGE</a></td>
+	<td class="summary">Network message enumeration</td>
+	</tr>
+</table>
+<h2><a href="#Helpers">Helpers </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#library:BuildObjectsFromSQL">library:BuildObjectsFromSQL(model, result[, bSingleResult])</a></td>
+	<td class="summary">Creates objects from the given SQL result.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:BuildQuery">library:BuildQuery(type, data)</a></td>
+	<td class="summary">Builds an SQL query given the type.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:CheckObjectRequestCondition">library:CheckObjectRequestCondition(modelName, player)</a></td>
+	<td class="summary">Returns true if the player is able to request object data from the given model.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:FilterPlayers">library:FilterPlayers(func)</a></td>
+	<td class="summary">Returns a table of players that passed the given filter function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:GetCallbackArgument">library:GetCallbackArgument(...)</a></td>
+	<td class="summary">Returns the first function argument from the given varargs.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:GetName">library:GetName()</a></td>
+	<td class="summary">Returns the unique full name of the project.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:GetObjectTable">library:GetObjectTable(object)</a></td>
+	<td class="summary">Returns a table of an object's properties.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:IsObject">library:IsObject(var)</a></td>
+	<td class="summary">Returns true if the given object is an activerecord object.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:NetworkModel">library:NetworkModel(model)</a></td>
+	<td class="summary">Networks a model to clients.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:NetworkObject">library:NetworkObject(object)</a></td>
+	<td class="summary">Networks an object to clients.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:OnPrefixSet">library:OnPrefixSet()</a></td>
+	<td class="summary">Called when the prefix for the project has been set.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:PackTable">library:PackTable(table)</a></td>
+	<td class="summary">Serializes and compresses a table for networking.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:PerformModelSync">library:PerformModelSync(model)</a></td>
+	<td class="summary">Pulls all of a model's objects from the database and stores it in memory.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:Pluralize">library:Pluralize(string)</a></td>
+	<td class="summary">Pluralize a string.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:QueuePush">library:QueuePush(type, data)</a></td>
+	<td class="summary">Queues a database push with the given type.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:ReadNetTable">library:ReadNetTable()</a></td>
+	<td class="summary">Reads a table from the currently active net message.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:SetPrefix">library:SetPrefix(prefix)</a></td>
+	<td class="summary">Sets the prefix used when creating tables.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:SetupModel">library:SetupModel(name, setup)</a></td>
+	<td class="summary">Creates a model and does the appropriate database/networking setup for it.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:StartNetMessage">library:StartNetMessage(type)</a></td>
+	<td class="summary">Begins an activerecord net message.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:Think">library:Think()</a></td>
+	<td class="summary">Handles some database stuff.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:UnpackTable">library:UnpackTable(string)</a></td>
+	<td class="summary">Decompresses and deserializes a string into a table.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library:WriteNetTable">library:WriteNetTable(data)</a></td>
+	<td class="summary">Writes a table to the currently active net message.</td>
+	</tr>
+</table>
+<h2><a href="#Class__Schema">Class: Schema </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.schema:Boolean">library.meta.schema:Boolean(name)</a></td>
+	<td class="summary">Adds a boolean to the model schema.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.schema:Integer">library.meta.schema:Integer(name)</a></td>
+	<td class="summary">Adds an integer to the model schema.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.schema:OnSync">library.meta.schema:OnSync(callback)</a></td>
+	<td class="summary">Sets callback executed when syncing is completed.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.schema:String">library.meta.schema:String(name)</a></td>
+	<td class="summary">Adds a string to the model schema.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.schema:Sync">library.meta.schema:Sync(bValue)</a></td>
+	<td class="summary">Sets whether or not the model will sync all in-memory objects with the database.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.schema:Text">library.meta.schema:Text(name)</a></td>
+	<td class="summary">Adds a text field to the model schema.</td>
+	</tr>
+</table>
+<h2><a href="#Class__Replication">Class: Replication </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.replication:Condition">library.meta.replication:Condition(callback)</a></td>
+	<td class="summary">Sets the replication condition function.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.replication:Enable">library.meta.replication:Enable(bValue)</a></td>
+	<td class="summary">Enables replication for the model.</td>
+	</tr>
+</table>
+<h2><a href="#Class__Object">Class: Object </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.object:Save">library.meta.object:Save()</a></td>
+	<td class="summary">Commits the object to the database and networks it to clients if applicable.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.object:__tostring">library.meta.object:__tostring()</a></td>
+	<td class="summary">Returns a string representation of the object.</td>
+	</tr>
+</table>
+<h2><a href="#Class__Model">Class: Model </a></h2>
+<table class="function_list">
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.model:All">library.meta.model:All(...)</a></td>
+	<td class="summary">Returns all objects with this model.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.model:FindBy">library.meta.model:FindBy(key, value, ...)</a></td>
+	<td class="summary">Returns an object with a matching key/value pair.</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.model:First">library.meta.model:First(...)</a></td>
+	<td class="summary">Returns the first object with this model</td>
+	</tr>
+	<tr>
+	<td class="name" nowrap><a href="#library.meta.model:New">library.meta.model:New()</a></td>
+	<td class="summary">Creates a new object.</td>
+	</tr>
+</table>
+
+<br/>
+<br/>
+
+
+    <h2 class="section-header "><a name="Tables"></a>Tables</h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "MESSAGE"></a>
+    <strong>MESSAGE</strong>
+    </dt>
+    <dd>
+    Network message enumeration
+
+
+    <h3>Fields:</h3>
+    <ul>
+        <li><span class="parameter">COMMIT</span>
+        Client-to-server object commit
+        </li>
+        <li><span class="parameter">SCHEMA</span>
+        Model schema update
+        </li>
+        <li><span class="parameter">REQUEST</span>
+        Object fetch request
+        </li>
+        <li><span class="parameter">UPDATE</span>
+        Object replication update
+        </li>
+        <li><span class="parameter">SYNC</span>
+        Full sync of objects
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Helpers"></a>Helpers </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "library:BuildObjectsFromSQL"></a>
+    <strong>library:BuildObjectsFromSQL(model, result[, bSingleResult])</strong>
+    </dt>
+    <dd>
+    Creates objects from the given SQL result.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">model</span>
+         Model to build object from
+        </li>
+        <li><span class="parameter">result</span>
+         SQL result set
+        </li>
+        <li><span class="parameter">bSingleResult</span>
+         Whether or not this should return a single object
+         (<em>optional</em>)
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Table of objects, or a single object as specified by bSingleResult
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:BuildQuery"></a>
+    <strong>library:BuildQuery(type, data)</strong>
+    </dt>
+    <dd>
+    Builds an SQL query given the type.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">type</span>
+         The type of query
+        </li>
+        <li><span class="parameter">data</span>
+         Any extra data
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        An SQL query object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:CheckObjectRequestCondition"></a>
+    <strong>library:CheckObjectRequestCondition(modelName, player)</strong>
+    </dt>
+    <dd>
+    Returns true if the player is able to request object data from the given model.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">modelName</span>
+         Name of the model
+        </li>
+        <li><span class="parameter">player</span>
+         Player to check with
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Whether or not the player is allowed to request object data
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:FilterPlayers"></a>
+    <strong>library:FilterPlayers(func)</strong>
+    </dt>
+    <dd>
+    Returns a table of players that passed the given filter function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">func</span>
+         The filter function to run players through
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        A table of players
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:GetCallbackArgument"></a>
+    <strong>library:GetCallbackArgument(...)</strong>
+    </dt>
+    <dd>
+    Returns the first function argument from the given varargs.  Currently kind of useless.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Callback function
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:GetName"></a>
+    <strong>library:GetName()</strong>
+    </dt>
+    <dd>
+    Returns the unique full name of the project.  Mainly used for networking.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Name of project
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:GetObjectTable"></a>
+    <strong>library:GetObjectTable(object)</strong>
+    </dt>
+    <dd>
+    Returns a table of an object's properties.  Useful for iterating over properties.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">object</span>
+         Object to get properties from
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Table of key/values for the given object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:IsObject"></a>
+    <strong>library:IsObject(var)</strong>
+    </dt>
+    <dd>
+    Returns true if the given object is an activerecord object.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">var</span>
+         Any object
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Whether or not var is an activerecord object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:NetworkModel"></a>
+    <strong>library:NetworkModel(model)</strong>
+    </dt>
+    <dd>
+    Networks a model to clients.  This does not check if replication is applicable for the object's model, so you'll have to do it yourself!
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">model</span>
+         Model to network
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:NetworkObject"></a>
+    <strong>library:NetworkObject(object)</strong>
+    </dt>
+    <dd>
+    Networks an object to clients.  This does not check if replication is applicable for the object's model, so you'll have to do it yourself!
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">object</span>
+         Object to network
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:OnPrefixSet"></a>
+    <strong>library:OnPrefixSet()</strong>
+    </dt>
+    <dd>
+    Called when the prefix for the project has been set.
+ Currently used for setting up networking events.
+ This should NOT be overridden, otherwise things will break BADLY!
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:PackTable"></a>
+    <strong>library:PackTable(table)</strong>
+    </dt>
+    <dd>
+    Serializes and compresses a table for networking.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">table</span>
+         Table of data
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+        <li>
+        Packed data string</li>
+        <li>
+        Length of data</li>
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:PerformModelSync"></a>
+    <strong>library:PerformModelSync(model)</strong>
+    </dt>
+    <dd>
+    Pulls all of a model's objects from the database and stores it in memory.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">model</span>
+         The model to sync
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:Pluralize"></a>
+    <strong>library:Pluralize(string)</strong>
+    </dt>
+    <dd>
+    Pluralize a string.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">string</span>
+         String to pluralize
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Pluralized string
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:QueuePush"></a>
+    <strong>library:QueuePush(type, data)</strong>
+    </dt>
+    <dd>
+    Queues a database push with the given type.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">type</span>
+         The type of data push
+        </li>
+        <li><span class="parameter">data</span>
+         The data to push
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:ReadNetTable"></a>
+    <strong>library:ReadNetTable()</strong>
+    </dt>
+    <dd>
+    Reads a table from the currently active net message.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Table of data
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#library:WriteNetTable">WriteNetTable</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "library:SetPrefix"></a>
+    <strong>library:SetPrefix(prefix)</strong>
+    </dt>
+    <dd>
+    Sets the prefix used when creating tables.  An underscore is appended to the end of the given prefix. Default is "ar".
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">prefix</span>
+         String to use as prefix
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:SetupModel"></a>
+    <strong>library:SetupModel(name, setup)</strong>
+    </dt>
+    <dd>
+    Creates a model and does the appropriate database/networking setup for it.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         Name of the model.
+        </li>
+        <li><span class="parameter">setup</span>
+         Function to execute when setting up the model.
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:StartNetMessage"></a>
+    <strong>library:StartNetMessage(type)</strong>
+    </dt>
+    <dd>
+    Begins an activerecord net message.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">type</span>
+         Message type
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#MESSAGE">MESSAGE</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "library:Think"></a>
+    <strong>library:Think()</strong>
+    </dt>
+    <dd>
+    Handles some database stuff.  Should be called constantly - about every second is enough.
+ This is already done automatically.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library:UnpackTable"></a>
+    <strong>library:UnpackTable(string)</strong>
+    </dt>
+    <dd>
+    Decompresses and deserializes a string into a table.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">string</span>
+         Packed data string
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Table of data
+    </ol>
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#library:PackTable">PackTable</a>
+    </ul>
+
+
+</dd>
+    <dt>
+    <a name = "library:WriteNetTable"></a>
+    <strong>library:WriteNetTable(data)</strong>
+    </dt>
+    <dd>
+    Writes a table to the currently active net message.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">data</span>
+         Table of data
+        </li>
+    </ul>
+
+
+
+    <h3>See also:</h3>
+    <ul>
+         <a href="index.html#library:ReadNetTable">ReadNetTable</a>
+    </ul>
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Class__Schema"></a>Class: Schema </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "library.meta.schema:Boolean"></a>
+    <strong>library.meta.schema:Boolean(name)</strong>
+    </dt>
+    <dd>
+    Adds a boolean to the model schema.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         Name of field
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.schema:Integer"></a>
+    <strong>library.meta.schema:Integer(name)</strong>
+    </dt>
+    <dd>
+    Adds an integer to the model schema.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         Name of field
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.schema:OnSync"></a>
+    <strong>library.meta.schema:OnSync(callback)</strong>
+    </dt>
+    <dd>
+    Sets callback executed when syncing is completed.  Only called if <code>schema:Sync(true)</code> has been set.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">callback</span>
+         Function to execute
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.schema:String"></a>
+    <strong>library.meta.schema:String(name)</strong>
+    </dt>
+    <dd>
+    Adds a string to the model schema.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         Name of field
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.schema:Sync"></a>
+    <strong>library.meta.schema:Sync(bValue)</strong>
+    </dt>
+    <dd>
+    Sets whether or not the model will sync all in-memory objects with the database.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">bValue</span>
+         true/false
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.schema:Text"></a>
+    <strong>library.meta.schema:Text(name)</strong>
+    </dt>
+    <dd>
+    Adds a text field to the model schema.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">name</span>
+         Name of field
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Class__Replication"></a>Class: Replication </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "library.meta.replication:Condition"></a>
+    <strong>library.meta.replication:Condition(callback)</strong>
+    </dt>
+    <dd>
+    Sets the replication condition function.  Note that this is REQUIRED when you're using replication.
+ A boolean return type is expected from the filter function.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">callback</span>
+         Function to use as the filter
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.replication:Enable"></a>
+    <strong>library.meta.replication:Enable(bValue)</strong>
+    </dt>
+    <dd>
+    Enables replication for the model.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">bValue</span>
+         Whether or not to enable/disable
+        </li>
+    </ul>
+
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Class__Object"></a>Class: Object </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "library.meta.object:Save"></a>
+    <strong>library.meta.object:Save()</strong>
+    </dt>
+    <dd>
+    Commits the object to the database and networks it to clients if applicable.
+
+
+
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.object:__tostring"></a>
+    <strong>library.meta.object:__tostring()</strong>
+    </dt>
+    <dd>
+    Returns a string representation of the object.  This will include its model and properties.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        String representation of object
+    </ol>
+
+
+
+
+</dd>
+</dl>
+    <h2 class="section-header "><a name="Class__Model"></a>Class: Model </h2>
+
+    <dl class="function">
+    <dt>
+    <a name = "library.meta.model:All"></a>
+    <strong>library.meta.model:All(...)</strong>
+    </dt>
+    <dd>
+    Returns all objects with this model.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        Table of objects
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.model:FindBy"></a>
+    <strong>library.meta.model:FindBy(key, value, ...)</strong>
+    </dt>
+    <dd>
+    Returns an object with a matching key/value pair.
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">key</span>
+         Name of the property to match
+        </li>
+        <li><span class="parameter">value</span>
+         Value of the property to match
+        </li>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        An object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.model:First"></a>
+    <strong>library.meta.model:First(...)</strong>
+    </dt>
+    <dd>
+    Returns the first object with this model
+
+
+    <h3>Parameters:</h3>
+    <ul>
+        <li><span class="parameter">...</span>
+
+
+
+        </li>
+    </ul>
+
+    <h3>Returns:</h3>
+    <ol>
+
+        An object
+    </ol>
+
+
+
+
+</dd>
+    <dt>
+    <a name = "library.meta.model:New"></a>
+    <strong>library.meta.model:New()</strong>
+    </dt>
+    <dd>
+    Creates a new object.
+
+
+
+    <h3>Returns:</h3>
+    <ol>
+
+        An object defined by the given model class.
+    </ol>
+
+
+
+
+</dd>
+</dl>
+
+
+</div> <!-- id="content" -->
+</div> <!-- id="main" -->
+<div id="about">
+<i>generated by <a href="http://github.com/stevedonovan/LDoc">LDoc 1.4.3</a></i>
+<i style="float:right;">Last updated 2016-06-20 01:27:35 </i>
+</div> <!-- id="about" -->
+</div> <!-- id="container" -->
+</body>
+</html>
